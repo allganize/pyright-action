@@ -6390,7 +6390,7 @@ async function main() {
       return;
     }
     const report = Report.parse(JSON.parse(stdout));
-    var { status, stdout } = cp.spawnSync(`git diff --name-status ${process.env["GITHUB_BASE_REF"]} HEAD | grep ^[MAC]* | xargs`, {
+    var { status, stdout } = cp.spawnSync(`git diff --name-status origin/${process.env["GITHUB_BASE_REF"]} HEAD | grep ^[MAC]* | xargs`, {
       shell: true,
       encoding: "utf-8",
       stdio: ["ignore", "pipe", "inherit"],
