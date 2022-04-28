@@ -6379,8 +6379,12 @@ async function main() {
     }
     const { status, stdout } = cp.spawnSync(process.execPath, args, {
       encoding: "utf-8",
-      stdio: ["ignore", "pipe", "inherit"]
+      stdio: ["ignore", "pipe", "inherit"],
+      maxBuffer: 1024 * 1024 * 10
     });
+    if (status === null) {
+      core.setFailed(`process killed due to signal`);
+    }
     if (!stdout.trim()) {
       core.setFailed(`Exit code ${status}`);
       return;

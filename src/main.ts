@@ -43,7 +43,12 @@ export async function main() {
         const { status, stdout } = cp.spawnSync(process.execPath, args, {
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'inherit'],
+            maxBuffer: 1024 * 1024 * 10,
         });
+
+        if (status === null) {
+            core.setFailed(`process killed due to signal`);
+        }
 
         if (!stdout.trim()) {
             // Process crashed. stderr was inherited, so just mark the step as failed.
