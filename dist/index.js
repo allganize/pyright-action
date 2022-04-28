@@ -6408,7 +6408,7 @@ async function main() {
     const { errorCount, warningCount, informationCount } = report.summary;
     console.log(`${errorCount} ${errorCount === 1 ? "error" : "errors"}, ${warningCount} ${warningCount === 1 ? "warning" : "warnings"}, ${informationCount} ${informationCount === 1 ? "info" : "infos"} `);
     if (status !== 0) {
-      core.setFailed(`${errorCount} ${errorCount === 1 ? "error" : "errors"}`);
+      console.log(`Done! execution status: ${status}`);
     }
   } catch (e) {
     core.setFailed(e.message);

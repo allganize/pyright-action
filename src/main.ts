@@ -91,7 +91,8 @@ export async function main() {
         );
 
         if (status !== 0) {
-            core.setFailed(`${errorCount} ${errorCount === 1 ? 'error' : 'errors'}`);
+            // core.setFailed(`${errorCount} ${errorCount === 1 ? 'error' : 'errors'}`);
+            console.log(`Done! execution status: ${status}`)
         }
     } catch (e: any) {
         core.setFailed(e.message);
