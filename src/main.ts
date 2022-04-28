@@ -3,6 +3,7 @@ import * as command from '@actions/core/lib/command';
 import * as httpClient from '@actions/http-client';
 import * as tc from '@actions/tool-cache';
 import * as cp from 'child_process';
+import * as fs from 'fs';
 import * as path from 'path';
 import SemVer from 'semver/classes/semver';
 import stringArgv from 'string-argv';
@@ -40,7 +41,7 @@ export async function main() {
             return;
         }
 
-        const { status, stdout } = cp.spawnSync(process.execPath, args, {
+        var { status, stdout } = cp.spawnSync(process.execPath, args, {
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'inherit'],
             maxBuffer: 1024 * 1024 * 10,
@@ -58,6 +59,25 @@ export async function main() {
 
         const report = Report.parse(JSON.parse(stdout));
 
+        var { status, stdout } = cp.spawnSync(`git diff --name-status ${process.env["GITHUB_BASE_REF"]} HEAD | grep ^[MAC]* | xargs`,{
+            shell: true,
+            encoding: 'utf-8',
+            stdio: ['ignore', 'pipe', 'inherit'],
+            maxBuffer: 1024 * 1024 * 10,
+        });
+
+
+        const diffs = stdout.trim().split(" ").map(e => e.trim()).filter(e => e.length > 0)
+
+        const files = []
+        for (let i = 0; i < diffs.length; i++) {
+          console.log(diffs[i])
+          if (i % 2 === 1) {
+            files.push(diffs[i])
+          }
+        }
+        console.log(`Files with diff: ${files}`)
+        
         report.generalDiagnostics.forEach((diag) => {
             console.log(diagnosticToString(diag, /* forCommand */ false));
 
@@ -68,6 +88,22 @@ export async function main() {
             const line = diag.range?.start.line ?? 0;
             const col = diag.range?.start.character ?? 0;
             const message = diagnosticToString(diag, /* forCommand */ true);
+            const file = diag.file ?? ""
+
+            let isDiff = false
+
+            for (const diff of diffs) {
+              if (file.trim().endsWith(diff)) {
+                isDiff = true
+                break;
+              }
+            }
+
+            if (isDiff) {
+              console.log(`Diff file: ${file}`)
+            } else {
+              return
+            }
 
             // This is technically a log line and duplicates the console.log above,
             // but we want to have the below look nice in commit comments.

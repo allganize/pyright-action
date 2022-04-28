@@ -6377,7 +6377,7 @@ async function main() {
       }
       return;
     }
-    const { status, stdout } = cp.spawnSync(process.execPath, args, {
+    var { status, stdout } = cp.spawnSync(process.execPath, args, {
       encoding: "utf-8",
       stdio: ["ignore", "pipe", "inherit"],
       maxBuffer: 1024 * 1024 * 10
@@ -6390,6 +6390,21 @@ async function main() {
       return;
     }
     const report = Report.parse(JSON.parse(stdout));
+    var { status, stdout } = cp.spawnSync(`git diff --name-status ${process.env["GITHUB_BASE_REF"]} HEAD | grep ^[MAC]* | xargs`, {
+      shell: true,
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "inherit"],
+      maxBuffer: 1024 * 1024 * 10
+    });
+    const diffs = stdout.trim().split(" ").map((e) => e.trim()).filter((e) => e.length > 0);
+    const files = [];
+    for (let i = 0; i < diffs.length; i++) {
+      console.log(diffs[i]);
+      if (i % 2 === 1) {
+        files.push(diffs[i]);
+      }
+    }
+    console.log(`Files with diff: ${files}`);
     report.generalDiagnostics.forEach((diag) => {
       var _a, _b;
       console.log(diagnosticToString(diag, false));
@@ -6399,6 +6414,19 @@ async function main() {
       const line = ((_a = diag.range) == null ? void 0 : _a.start.line) ?? 0;
       const col = ((_b = diag.range) == null ? void 0 : _b.start.character) ?? 0;
       const message = diagnosticToString(diag, true);
+      const file = diag.file ?? "";
+      let isDiff = false;
+      for (const diff of diffs) {
+        if (file.trim().endsWith(diff)) {
+          isDiff = true;
+          break;
+        }
+      }
+      if (isDiff) {
+        console.log(`Diff file: ${file}`);
+      } else {
+        return;
+      }
       command.issueCommand(diag.severity, {
         file: diag.file,
         line: line + 1,
